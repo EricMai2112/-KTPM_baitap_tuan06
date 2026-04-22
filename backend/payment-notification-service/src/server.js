@@ -40,7 +40,7 @@ async function bootstrap() {
 
   // Khởi động HTTP server
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n[Server] ✅ HTTP server đang chạy tại http://0.0.0.0:${PORT}`);
+    console.log(`\n[Server] ✅ HTTP server đang chạy tại http://172.16.35.241:${PORT}`);
     console.log(`[Server] 📋 Endpoints:`);
     console.log(`         GET  /health                  - Health check`);
     console.log(`         GET  /payments                - Lịch sử thanh toán`);

@@ -19,23 +19,32 @@ router.get('/health', (req, res) => {
 });
 
 // ─── Xem lịch sử payment ─────────────────────────────────────
-router.get('/payments', (req, res) => {
-  res.json({
-    success: true,
-    total: getPaymentHistory().length,
-    data: getPaymentHistory(),
-  });
+router.get('/payments', async (req, res) => {
+  try {
+    const payments = await getPaymentHistory();
+    res.json({
+      success: true,
+      total: payments.length,
+      data: payments,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi lấy dữ liệu: " + error.message });
+  }
 });
 
 // ─── Xem lịch sử notification ────────────────────────────────
-router.get('/notifications', (req, res) => {
-  res.json({
-    success: true,
-    total: getNotificationHistory().length,
-    data: getNotificationHistory(),
-  });
+router.get('/notifications', async (req, res) => {
+  try {
+    const notifications = await getNotificationHistory();
+    res.json({
+      success: true,
+      total: notifications.length,
+      data: notifications,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi lấy dữ liệu: " + error.message });
+  }
 });
-
 // ─── TEST: Giả lập publish BOOKING_CREATED (để test không cần Booking Service) ──
 router.post('/test/simulate-booking', (req, res) => {
   const mockBooking = {

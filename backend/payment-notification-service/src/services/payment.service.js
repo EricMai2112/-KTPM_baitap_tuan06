@@ -1,12 +1,8 @@
 // src/services/payment.service.js
-// Logic xử lý thanh toán: random success/fail
-
 const axios = require('axios');
 const { publishEvent } = require('../publishers/eventPublisher');
 const EVENTS = require('../constants/events');
-
-// Lưu lịch sử payment trong memory (không cần DB)
-const paymentHistory = [];
+const Payment = require('../models/payment.model'); // Import Model Payment
 
 /**
  * Xử lý thanh toán cho một booking
@@ -32,10 +28,11 @@ async function processPayment(bookingData) {
     totalAmount: totalAmount || 0,
     method: 'CARD', // giả lập
     status: isSuccess ? 'SUCCESS' : 'FAILED',
-    processedAt: new Date().toISOString(),
+    // processedAt sẽ tự động được gán theo default Date.now() trong schema
   };
 
-  paymentHistory.push(paymentRecord);
+  // 1. Lưu bản ghi thanh toán vào MongoDB
+  await Payment.create(paymentRecord);
 
   if (isSuccess) {
     console.log(`[PaymentService] ✅ Thanh toán THÀNH CÔNG - Booking #${bookingId}`);
@@ -70,28 +67,11 @@ async function processPayment(bookingData) {
   return paymentRecord;
 }
 
-/**
- * Gọi Booking Service để cập nhật trạng thái đơn
- */
-async function updateBookingStatus(bookingId, status) {
-  const bookingServiceUrl = process.env.BOOKING_SERVICE_URL;
 
-  if (!bookingServiceUrl) {
-    console.warn('[PaymentService] BOOKING_SERVICE_URL chưa cấu hình, bỏ qua update.');
-    return;
-  }
-
-  try {
-    await axios.patch(`${bookingServiceUrl}/bookings/${bookingId}/status`, { status });
-    console.log(`[PaymentService] 🔄 Cập nhật Booking #${bookingId} → ${status}`);
-  } catch (err) {
-    console.warn(`[PaymentService] ⚠️ Không thể cập nhật Booking Service: ${err.message}`);
-    // Không throw - service vẫn tiếp tục hoạt động
-  }
-}
-
-function getPaymentHistory() {
-  return paymentHistory;
+// 2. Cập nhật hàm lấy lịch sử thành Async để query MongoDB
+async function getPaymentHistory() {
+  // Lấy danh sách từ DB, sắp xếp mới nhất lên đầu
+  return await Payment.find().sort({ processedAt: -1 });
 }
 
 function delay(ms) {

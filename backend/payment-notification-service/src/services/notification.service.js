@@ -1,14 +1,10 @@
 // src/services/notification.service.js
-// Xử lý gửi thông báo khi nhận event PAYMENT_COMPLETED
-
-// Lưu lịch sử thông báo trong memory
-const notificationHistory = [];
+const Notification = require('../models/notification.model'); // Import Model Notification
 
 /**
- * Gửi thông báo đặt vé thành công
- * Hiện tại: console.log (có thể mở rộng sang email, SMS, websocket)
+ * Gửi thông báo đặt vé thành công và lưu vào DB
  */
-function sendSuccessNotification(payload) {
+async function sendSuccessNotification(payload) {
   const { bookingId, userId, movieId, seats, totalAmount } = payload;
 
   const notification = {
@@ -17,10 +13,11 @@ function sendSuccessNotification(payload) {
     userId,
     bookingId,
     message: `🎬 Booking #${bookingId} thành công! Bạn đã đặt ${seats} ghế cho phim ${movieId}.`,
-    sentAt: new Date().toISOString(),
+    // sentAt sẽ tự động lấy Date.now() theo Schema
   };
 
-  notificationHistory.push(notification);
+  // Lưu thông báo vào MongoDB
+  await Notification.create(notification);
 
   // --- OUTPUT THÔNG BÁO RA CONSOLE ---
   console.log('\n' + '='.repeat(60));
@@ -30,16 +27,15 @@ function sendSuccessNotification(payload) {
   console.log(`   🎬 Movie ID   : ${movieId}`);
   console.log(`   💺 Ghế        : ${Array.isArray(seats) ? seats.join(', ') : seats}`);
   console.log(`   💰 Tổng tiền  : ${formatCurrency(totalAmount)}`);
-  console.log(`   ⏰ Thời gian  : ${notification.sentAt}`);
   console.log('='.repeat(60) + '\n');
 
   return notification;
 }
 
 /**
- * Gửi thông báo đặt vé thất bại
+ * Gửi thông báo đặt vé thất bại và lưu vào DB
  */
-function sendFailedNotification(payload) {
+async function sendFailedNotification(payload) {
   const { bookingId, userId, reason } = payload;
 
   const notification = {
@@ -48,24 +44,24 @@ function sendFailedNotification(payload) {
     userId,
     bookingId,
     message: `❌ Booking #${bookingId} thất bại. Lý do: ${reason}`,
-    sentAt: new Date().toISOString(),
   };
 
-  notificationHistory.push(notification);
+  // Lưu thông báo vào MongoDB
+  await Notification.create(notification);
 
   console.log('\n' + '='.repeat(60));
   console.log('🔔 [NOTIFICATION] BOOKING THẤT BẠI!');
   console.log(`   📋 Booking ID : #${bookingId}`);
   console.log(`   👤 User ID    : ${userId}`);
   console.log(`   ❗ Lý do      : ${reason}`);
-  console.log(`   ⏰ Thời gian  : ${notification.sentAt}`);
   console.log('='.repeat(60) + '\n');
 
   return notification;
 }
 
-function getNotificationHistory() {
-  return notificationHistory;
+// Cập nhật hàm lấy lịch sử thành Async để query MongoDB
+async function getNotificationHistory() {
+  return await Notification.find().sort({ sentAt: -1 });
 }
 
 function formatCurrency(amount) {
