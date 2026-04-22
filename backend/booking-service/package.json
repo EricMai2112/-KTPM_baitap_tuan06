@@ -1,0 +1,14 @@
+{
+  "name": "movie-ticket-booking-service",
+  "version": "1.0.0",
+  "description": "Booking Service for an event-driven movie ticket system",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "mongodb": "^6.21.0"
+  }
+}
